@@ -85,6 +85,11 @@ def make_timing_kb() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="4 и более месяца", callback_data="timing:4 и более месяца")],
     ])
 
+def make_signup_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Записаться", callback_data="start:consult")],
+    ])
+
  
 
 
@@ -94,8 +99,7 @@ INTRO_TEXT = (
     "Ваш брокер по инвестициям в курортную недвижимость.\n\n"
     "Здесь вы найдете выгодные объекты с ростом цены и прозрачными условиями, а я помогу выбрать именно то, что подходит вам. 🌿\n\n"
     "Чтобы подобрать лучшие варианты, давайте начнем с трех вопросов о сроках, цели и бюджете покупки — это займет минуту и сразу покажет подходящие проекты.\n\n"
-    "А потом можем встретиться на бесплатной консультации ☀️\n\n"
-    "А как Вас зовут ?"
+    "А потом можем встретиться на бесплатной консультации ☀️"
 )
 
 # --- Доп. тексты ---
@@ -145,7 +149,7 @@ async def cmd_start(message: Message, state: FSMContext):
             await message.answer(INTRO_TEXT)
     else:
         await message.answer(INTRO_TEXT)
-    await state.set_state(Survey.name)
+    await message.answer("Запишитесь на бесплатную консультацию прямо сейчас", reply_markup=make_signup_kb())
 
 async def survey_name(message: Message, state: FSMContext):
     user_name = message.text.strip()
@@ -156,6 +160,11 @@ async def survey_name(message: Message, state: FSMContext):
     )
     await message.answer(greet_text, reply_markup=make_budget_kb())
     await state.set_state(Survey.budget)
+
+async def on_start_consult(cq: CallbackQuery, state: FSMContext):
+    await cq.answer()
+    await cq.message.answer("А как Вас зовут ?")
+    await state.set_state(Survey.name)
 
 async def on_budget_selected(cq: CallbackQuery, state: FSMContext):
     try:
@@ -218,9 +227,19 @@ async def survey_phone(message: Message, state: FSMContext):
     except Exception:
         pass
 
-    await message.answer(
-        "✨ Спасибо за ваши ответы!\n\nТеперь я могу подобрать для вас лучшие объекты с прозрачными условиями и высоким потенциалом доходности.\n\n💌 Скоро свяжусь с Вами с персональными предложениями — будьте на связи!"
+    pdf_path = Path("data/test.pdf")
+    final_caption = (
+        "Спасибо за ответы! 🙏\n\n"
+        "Я уже подготовила для вас персонализированную презентацию с лучшими предложениями.\n\n"
+        "📎 Скачивайте презентацию и изучайте предложения!"
     )
+    if pdf_path.exists():
+        try:
+            await message.answer_document(document=FSInputFile(str(pdf_path)), caption=final_caption)
+        except Exception:
+            await message.answer(final_caption)
+    else:
+        await message.answer(final_caption)
     await state.clear()
 
  
@@ -237,6 +256,7 @@ async def main():
 
     # Регистрация обработчиков только для простой анкеты
     dp.message.register(cmd_start, F.text == "/start")
+    dp.callback_query.register(on_start_consult, F.data == "start:consult")
     dp.message.register(survey_name, Survey.name)
     dp.callback_query.register(on_budget_selected, F.data.startswith("budget:"), Survey.budget)
     dp.callback_query.register(on_goal_selected, F.data.startswith("goal:"), Survey.goal)
