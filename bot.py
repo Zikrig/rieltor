@@ -235,11 +235,15 @@ async def survey_phone(message: Message, state: FSMContext):
     )
     if pdf_path.exists():
         try:
-            await message.answer_document(document=FSInputFile(str(pdf_path)), caption=final_caption)
+            await message.answer_document(
+                document=FSInputFile(str(pdf_path)),
+                caption=final_caption,
+                reply_markup=make_signup_kb(),
+            )
         except Exception:
-            await message.answer(final_caption)
+            await message.answer(final_caption, reply_markup=make_signup_kb())
     else:
-        await message.answer(final_caption)
+        await message.answer(final_caption, reply_markup=make_signup_kb())
     await state.clear()
 
  
