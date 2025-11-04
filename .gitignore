@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Env & secrets
+.env
+creds.json
+bot_config.json
+tgs.txt
+
+# Docker
+*.log
+
