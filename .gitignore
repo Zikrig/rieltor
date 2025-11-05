@@ -13,6 +13,7 @@ venv/
 creds.json
 bot_config.json
 tgs.txt
+pdf_config.json
 
 # Docker
 *.log
