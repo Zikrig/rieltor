@@ -188,7 +188,7 @@ def save_pdf_mapping(mapping: dict) -> None:
 
 def get_pdf_path_for_goal(goal: str | None) -> Path:
     mapping = load_pdf_mapping()
-    default_path = mapping.get("default", "data/test.pdf")
+    default_path = mapping.get("default", "data/презентация.pdf")
     if goal:
         path_str = mapping.get(goal, default_path)
     else:
@@ -298,7 +298,7 @@ async def admin_pdf_start(message: Message, state: FSMContext):
     if not is_admin(message.from_user.id):
         return
     mapping = load_pdf_mapping()
-    current = json.dumps(mapping, ensure_ascii=False, indent=2) if mapping else "(пока не задано, по умолчанию data/test.pdf)"
+    current = json.dumps(mapping, ensure_ascii=False, indent=2) if mapping else "(пока не задано, по умолчанию data/презентация.pdf)"
     await state.set_state(PdfSetup.choose_goal)
     await message.answer("Выберите цель, для которой хотите загрузить новый PDF.\n\nТекущие значения:\n" + current, reply_markup=make_pdf_goals_kb())
 
@@ -476,7 +476,7 @@ async def survey_phone(message: Message, state: FSMContext):
     try:
         if not pdf_path.exists():
             # Фоллбэк к дефолтному, если указанного файла нет
-            fallback = Path("data/test.pdf")
+            fallback = Path("data/презентация.pdf")
             if fallback.exists():
                 pdf_path = fallback
         if pdf_path.exists():
