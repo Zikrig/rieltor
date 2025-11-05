@@ -213,6 +213,7 @@ def schedule_partial_save(user_id: int, state: FSMContext, bot: Bot) -> None:
     PENDING_SAVE_TASKS[user_id] = asyncio.create_task(_partial_save_task(user_id, state, bot))
 
 async def _partial_save_task(user_id: int, state: FSMContext, bot: Bot) -> None:
+    current_task = asyncio.current_task()
     try:
         await asyncio.sleep(60)
         data = await state.get_data()
@@ -244,8 +245,20 @@ async def _partial_save_task(user_id: int, state: FSMContext, bot: Bot) -> None:
             await notify_admins(bot, summary)
         except Exception:
             pass
+        # Очищаем состояние пользователя после автосохранения
+        try:
+            await state.clear()
+        except Exception:
+            pass
     except asyncio.CancelledError:
         return
+    finally:
+        # Удаляем только если задача всё ещё актуальная для user_id
+        try:
+            if PENDING_SAVE_TASKS.get(user_id) is current_task:
+                PENDING_SAVE_TASKS.pop(user_id, None)
+        except Exception:
+            pass
 
 async def notify_admins(bot: Bot, text: str) -> None:
     if not ADMIN_IDS:
